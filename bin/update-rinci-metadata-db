@@ -1,0 +1,98 @@
+#!/usr/bin/perl
+
+use 5.010;
+use strict;
+use warnings;
+
+use Perinci::CmdLine 1.04;
+
+our $VERSION = '0.01'; # VERSION
+our $DATE = '2014-06-19'; # DATE
+
+Perinci::CmdLine->new(
+    url => '/App/UpdateRinciMetadataDb/update_rinci_metadata_db',
+)->run;
+
+# ABSTRACT: Create/update Rinci metadata database
+# PODNAME: update-rinci-metadata-db
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+update-rinci-metadata-db - Create/update Rinci metadata database
+
+=head1 VERSION
+
+This document describes version 0.01 of update-rinci-metadata-db (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-06-19.
+
+=head1 SYNOPSIS
+
+Will scan all modules under C<MyApp::> recursively and record into database.
+
+ % update-rinci-metadata-db dbi:SQLite:dbname=metadata.db MyApp::
+
+For more options:
+
+ % update-rinci-metadata-db --help
+
+=head1 DESCRIPTION
+
+This script creates/updates database that stores L<Rinci> metadata retrieved
+from Perl modules. The created database is suitable for use by
+L<Perinci::Access::Schemeless::DBI>.
+
+=head1 USAGE
+
+ % update-rinci-metadata-db [opt] <DBI-DSN> <module-or-prefixes> ...
+
+=head1 OPTIONS
+
+=head2 --user => str
+
+DBI connection username.
+
+=head2 --password => str
+
+DBI connection password.
+
+=head1 TODO
+
+Allow other serialization format than L<JSON>.
+
+=head1 SEE ALSO
+
+L<Perinci::Access::Schemeless::DBI>
+
+=head1 HOMEPAGE
+
+Please visit the project's homepage at L<https://metacpan.org/release/App-UpdateRinciMetadataDb>.
+
+=head1 SOURCE
+
+Source repository is at L<https://github.com/sharyanto/perl-App-UpdateRinciMetadataDb>.
+
+=head1 BUGS
+
+Please report any bugs or feature requests on the bugtracker website L<https://rt.cpan.org/Public/Dist/Display.html?Name=App-UpdateRinciMetadataDb>
+
+When submitting a bug or request, please include a test-file or a
+patch to an existing test-file that illustrates the bug or desired
+feature.
+
+=head1 AUTHOR
+
+Steven Haryanto <stevenharyanto@gmail.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2014 by Steven Haryanto.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
