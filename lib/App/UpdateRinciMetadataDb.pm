@@ -14,7 +14,7 @@ use Module::Path;
 use Perinci::Access::Perl;
 use SHARYANTO::SQL::Schema;
 
-our $VERSION = '0.02'; # VERSION
+our $VERSION = '0.03'; # VERSION
 our $DATE = '2014-06-20'; # DATE
 
 use Data::Clean::JSON;
@@ -32,7 +32,7 @@ $SPEC{update_rinci_metadata_db} = {
             summary => 'DBI connection DSN',
             description => <<'_',
 
-Note: has been tested with SQLite only.
+Note: has been tested with MySQL and SQLite only.
 
 _
             schema => 'str*',
@@ -103,8 +103,8 @@ sub update_rinci_metadata_db {
     my $res = SHARYANTO::SQL::Schema::create_or_update_db_schema(
         spec => {
             install => [
-                'CREATE TABLE IF NOT EXISTS module (name TEXT PRIMARY KEY, summary TEXT, metadata BLOB, mtime INT)',
-                'CREATE TABLE IF NOT EXISTS function (module TEXT NOT NULL, name TEXT NOT NULL, summary TEXT, metadata BLOB, UNIQUE(module, name))',
+                'CREATE TABLE IF NOT EXISTS module (name VARCHAR(255) PRIMARY KEY, summary TEXT, metadata BLOB, mtime INT)',
+                'CREATE TABLE IF NOT EXISTS function (module VARCHAR(255) NOT NULL, name VARCHAR(255) NOT NULL, summary TEXT, metadata BLOB, UNIQUE(module, name))',
             ],
         },
         dbh => $dbh,
@@ -206,7 +206,7 @@ App::UpdateRinciMetadataDb - Create/update Rinci metadata database
 
 =head1 VERSION
 
-This document describes version 0.02 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-06-20.
+This document describes version 0.03 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-06-20.
 
 =head1 FUNCTIONS
 
@@ -226,7 +226,7 @@ Arguments ('*' denotes required arguments):
 
 DBI connection DSN.
 
-Note: has been tested with SQLite only.
+Note: has been tested with MySQL and SQLite only.
 
 =item * B<exclude> => I<array>
 

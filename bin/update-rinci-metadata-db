@@ -6,7 +6,7 @@ use warnings;
 
 use Perinci::CmdLine;
 
-our $VERSION = '0.02'; # VERSION
+our $VERSION = '0.03'; # VERSION
 our $DATE = '2014-06-20'; # DATE
 
 Perinci::CmdLine->new(
@@ -28,7 +28,7 @@ update-rinci-metadata-db - Create/update Rinci metadata database
 
 =head1 VERSION
 
-This document describes version 0.02 of update-rinci-metadata-db (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-06-20.
+This document describes version 0.03 of update-rinci-metadata-db (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-06-20.
 
 =head1 SYNOPSIS
 

@@ -2,7 +2,7 @@ NAME
     App::UpdateRinciMetadataDb - Create/update Rinci metadata database
 
 VERSION
-    This document describes version 0.02 of App::UpdateRinciMetadataDb (from
+    This document describes version 0.03 of App::UpdateRinciMetadataDb (from
     Perl distribution App-UpdateRinciMetadataDb), released on 2014-06-20.
 
 FUNCTIONS
@@ -17,7 +17,7 @@ FUNCTIONS
 
         DBI connection DSN.
 
-        Note: has been tested with SQLite only.
+        Note: has been tested with MySQL and SQLite only.
 
     *   exclude => *array*
 
