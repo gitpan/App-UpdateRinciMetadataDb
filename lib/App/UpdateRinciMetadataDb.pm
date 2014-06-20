@@ -14,8 +14,8 @@ use Module::Path;
 use Perinci::Access::Perl;
 use SHARYANTO::SQL::Schema;
 
-our $VERSION = '0.01'; # VERSION
-our $DATE = '2014-06-19'; # DATE
+our $VERSION = '0.02'; # VERSION
+our $DATE = '2014-06-20'; # DATE
 
 use Data::Clean::JSON;
 use Perinci::CmdLine;
@@ -53,6 +53,10 @@ _
             req => 1,
             pos => 1,
             greedy => 1,
+        },
+        exclude => {
+            summary => 'Perl modules to exclude',
+            schema => ['array*' => of => 'str*'],
         },
         library => {
             summary => "Include library path, like Perl's -I",
@@ -107,26 +111,28 @@ sub update_rinci_metadata_db {
     );
     return $res unless $res->[0] == 200;
 
+    my $exc = $args{exclude} // [];
+
     my @mods;
     for (@{ $args{module} }) {
         if (/::$/) {
             my $res = Module::List::list_modules(
                 $_, {list_modules=>1, recurse=>1});
             for (sort keys %$res) {
-                push @mods, $_ unless $_ ~~ @mods;
+                push @mods, $_ unless $_ ~~ @mods || $_ ~~ @$exc;
             }
         } else {
-            push @mods, $_ unless $_ ~~ @mods;
+            push @mods, $_ unless $_ ~~ @mods || $_ ~~ @$exc;
         }
     }
 
     my $progress = $args{-progress};
-    $progress->pos(0);
-    $progress->target(~~@mods);
+    $progress->pos(0) if $progress;
+    $progress->target(~~@mods) if $progress;
     my $i = 0;
     for my $mod (@mods) {
         $i++;
-        $progress->update(pos=>$i, message => "Processing module $mod ...");
+        $progress->update(pos=>$i, message => "Processing module $mod ...") if $progress;
         $log->debug("Processing module $mod ...");
         #sleep 1;
         my $rec = $dbh->selectrow_hashref("SELECT * FROM module WHERE name=?",
@@ -159,14 +165,14 @@ sub update_rinci_metadata_db {
             my $f = $e; $f =~ s!.+/!!;
             $j++;
             $log->debug("Processing function $mod\::$f ...");
-            $progress->update(pos => $i + $j/$numf, message => "Processing function $mod\::$f ...");
+            $progress->update(pos => $i + $j/$numf, message => "Processing function $mod\::$f ...") if $progress;
             $res = $pa->request(meta => "$uri$e");
             die "Can't meta $e: $res->[0] - $res->[1]" unless $res->[0] == 200;
             $cleanser->clean_in_place(my $meta = $res->[2]);
             $dbh->do("INSERT INTO function (module, name, summary, metadata) VALUES (?,?,?,?)", {}, $mod, $f, $meta->{summary}, $json->encode($meta));
         }
     }
-    $progress->finish;
+    $progress->finish if $progress;
 
     my @deleted_mods;
     my $sth = $dbh->prepare("SELECT name FROM module");
@@ -200,7 +206,7 @@ App::UpdateRinciMetadataDb - Create/update Rinci metadata database
 
 =head1 VERSION
 
-This document describes version 0.01 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-06-19.
+This document describes version 0.02 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-06-20.
 
 =head1 FUNCTIONS
 
@@ -221,6 +227,10 @@ Arguments ('*' denotes required arguments):
 DBI connection DSN.
 
 Note: has been tested with SQLite only.
+
+=item * B<exclude> => I<array>
+
+Perl modules to exclude.
 
 =item * B<force> => I<bool>
 

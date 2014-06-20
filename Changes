@@ -1,5 +1,12 @@
 Revision history for App-UpdateRinciMetadataDb
 
+0.02    2014-06-20 (SHARYANTO)
+
+        - Add option: --exclude.
+
+        - Make use of progress indicator optional.
+
+
 0.01    2014-06-19 (SHARYANTO)
 
         - First release.

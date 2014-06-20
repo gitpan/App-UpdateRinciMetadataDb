@@ -4,10 +4,10 @@ use 5.010;
 use strict;
 use warnings;
 
-use Perinci::CmdLine 1.04;
+use Perinci::CmdLine;
 
-our $VERSION = '0.01'; # VERSION
-our $DATE = '2014-06-19'; # DATE
+our $VERSION = '0.02'; # VERSION
+our $DATE = '2014-06-20'; # DATE
 
 Perinci::CmdLine->new(
     url => '/App/UpdateRinciMetadataDb/update_rinci_metadata_db',
@@ -28,7 +28,7 @@ update-rinci-metadata-db - Create/update Rinci metadata database
 
 =head1 VERSION
 
-This document describes version 0.01 of update-rinci-metadata-db (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-06-19.
+This document describes version 0.02 of update-rinci-metadata-db (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-06-20.
 
 =head1 SYNOPSIS
 
