@@ -14,7 +14,7 @@ use Module::Path;
 use Perinci::Access::Perl;
 use SHARYANTO::SQL::Schema;
 
-our $VERSION = '0.04'; # VERSION
+our $VERSION = '0.05'; # VERSION
 our $DATE = '2014-07-04'; # DATE
 
 use Data::Clean::JSON;
@@ -199,36 +199,36 @@ sub update_rinci_metadata_db {
     my $exc = $args{exclude} // [];
 
     my @pkgs;
-    for (@{ $args{module_or_package} }) {
-        if (/\A\+(.+)::\*?\z/) {
+    for my $entry (@{ $args{module_or_package} }) {
+        if ($entry =~ /\A\+(.+)::\*?\z/) {
             # package prefix
             $log->debug("Listing all packages under $1 ...");
             for (SHARYANTO::Package::Util::list_subpackages($1, 1)) {
                 next if $_ ~~ @pkgs || _is_excluded($_, $exc);
                 push @pkgs, $_;
             }
-        } elsif (/\A\+(.+)/) {
+        } elsif ($entry =~ /\A\+(.+)/) {
             # package name
             my $pkg = $1;
             next if $pkg ~~ @pkgs || _is_excluded($pkg, $exc);
             push @pkgs, $pkg;
-        } elsif (/(.+::)\*?\z/) {
+        } elsif ($entry =~ /(.+::)\*?\z/) {
             # module prefix
             $log->debug("Listing all modules under $1 ...");
             my $res = Module::List::list_modules(
                 $1, {list_modules=>1, recurse=>1});
-            for (sort keys %$res) {
-                next if $_ ~~ @pkgs || _is_excluded($_, $exc);
-                $log->debug("Loading module $_ ...");
-                load $_;
-                push @pkgs, $_;
+            for my $mod (sort keys %$res) {
+                next if $mod ~~ @pkgs || _is_excluded($mod, $exc);
+                $log->debug("Loading module $mod ...");
+                load $mod;
+                push @pkgs, $mod;
             }
         } else {
             # module name
-            next if $_ ~~ @pkgs || _is_excluded($_, $exc);
-            $log->debug("Loading module $_ ...");
-            load $_;
-            push @pkgs, $_;
+            next if $entry ~~ @pkgs || _is_excluded($entry, $exc);
+            $log->debug("Loading module $entry ...");
+            load $entry;
+            push @pkgs, $entry;
         }
     }
 
@@ -314,7 +314,7 @@ App::UpdateRinciMetadataDb - Create/update Rinci metadata database
 
 =head1 VERSION
 
-This document describes version 0.04 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-07-04.
+This document describes version 0.05 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-07-04.
 
 =head1 FUNCTIONS
 

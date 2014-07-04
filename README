@@ -2,7 +2,7 @@ NAME
     App::UpdateRinciMetadataDb - Create/update Rinci metadata database
 
 VERSION
-    This document describes version 0.04 of App::UpdateRinciMetadataDb (from
+    This document describes version 0.05 of App::UpdateRinciMetadataDb (from
     Perl distribution App-UpdateRinciMetadataDb), released on 2014-07-04.
 
 FUNCTIONS

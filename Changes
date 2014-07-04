@@ -1,5 +1,12 @@
 Revision history for App-UpdateRinciMetadataDb
 
+0.05    2014-07-04 (SHARYANTO)
+
+        - [Bugfix] Avoid the use of $_ for loose loops because something else
+          might overwrite it (e.g. during module load(), for modules that don't
+          quite behave).
+
+
 0.04    2014-07-04 (SHARYANTO)
 
         [INCOMPATIBLE CHANGES]
