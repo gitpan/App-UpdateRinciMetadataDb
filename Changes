@@ -1,5 +1,28 @@
 Revision history for App-UpdateRinciMetadataDb
 
+0.04    2014-07-04 (SHARYANTO)
+
+        [INCOMPATIBLE CHANGES]
+
+        - Bump database schema from 1 -> 2 (rename 'module' to 'package').
+
+        [ENHANCEMENTS]
+
+        - Add option: delete. Can be used to avoid deleting old packages from
+          database (via delete=>0 or --nodelete).
+
+        - Add options: -m, -M (like Perl's).
+
+        - Support adding packages with '+Foo::Bar' syntax, without loading
+          module of the same name.
+
+        - Supporting adding package prefixes with '+Foo::Bar::' or
+          '+Foo::Bar::*' syntax.
+
+        - Can now exclude prefixes too (e.g. --exclude 'Foo::Bar' --exclude
+          'Foo::Bar::' to exclude Foo::Bar as well as all packages under it).
+
+
 0.03    2014-06-20 (SHARYANTO)
 
         - Test with MySQL (in addition to SQLite).

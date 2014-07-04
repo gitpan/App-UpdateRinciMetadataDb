@@ -2,8 +2,8 @@ NAME
     App::UpdateRinciMetadataDb - Create/update Rinci metadata database
 
 VERSION
-    This document describes version 0.03 of App::UpdateRinciMetadataDb (from
-    Perl distribution App-UpdateRinciMetadataDb), released on 2014-06-20.
+    This document describes version 0.04 of App::UpdateRinciMetadataDb (from
+    Perl distribution App-UpdateRinciMetadataDb), released on 2014-07-04.
 
 FUNCTIONS
   update_rinci_metadata_db(%args) -> [status, msg, result, meta]
@@ -13,6 +13,11 @@ FUNCTIONS
 
     Arguments ('*' denotes required arguments):
 
+    *   delete => *bool* (default: 1)
+
+        Whether to delete packages from DB if no longer mentioned as
+        arguments or found in filesystem.
+
     *   dsn* => *str*
 
         DBI connection DSN.
@@ -21,9 +26,9 @@ FUNCTIONS
 
     *   exclude => *array*
 
-        Perl modules to exclude.
+        Perl package names or prefixes to exclude.
 
-    *   force => *bool*
+    *   force_update => *bool*
 
         Force update database even though module hasn't changed since last
         update.
@@ -36,13 +41,38 @@ FUNCTIONS
         effect. To make sure you use the right library, you can use
         "PERL5OPT" or explicitly use "perl" and use its "-I" option.
 
-    *   module* => *array*
+    *   module_or_package* => *array*
 
-        Perl module or prefixes to add/update.
+        Perl module or prefixes or package to add/update.
+
+        For each entry, you can specify:
+
+        *   a Perl module name e.g. "Foo::Bar". An attempt will be made to
+            load that module.
+
+        *   a module prefix ending with "::" or "::*" e.g. "Foo::Bar::*".
+            "Module::List" will be used to list all modules under
+            "Foo::Bar::" recursively and load all those modules.
+
+        *   a package name using "+Foo::Bar" syntax. An attempt to load
+            module with that name will *not* be made. This can be used to
+            add an already-loaded package e.g. by another module).
+
+        *   a package prefix using "+Foo::Bar::" or "+Foo::Bar::*" syntax.
+            Subpackages will be listed recursively (using
+            "SHARYANTO::Package::Util"'s "list_subpackages").
 
     *   password => *str*
 
         DBI connection password.
+
+    *   require => *array*
+
+        Require a Perl module, a la Perl's -m.
+
+    *   use => *array*
+
+        Use a Perl module, a la Perl's -M.
 
     *   user => *str*
 

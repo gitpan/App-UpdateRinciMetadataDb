@@ -9,13 +9,13 @@ use Log::Any '$log';
 use Data::Clean::JSON;
 use DBI;
 use JSON;
-use Module::List;
+use Module::Load qw(autoload load);
 use Module::Path;
 use Perinci::Access::Perl;
 use SHARYANTO::SQL::Schema;
 
-our $VERSION = '0.03'; # VERSION
-our $DATE = '2014-06-20'; # DATE
+our $VERSION = '0.04'; # VERSION
+our $DATE = '2014-07-04'; # DATE
 
 use Data::Clean::JSON;
 use Perinci::CmdLine;
@@ -23,6 +23,18 @@ use Perinci::CmdLine;
 my $cleanser = Data::Clean::JSON->get_cleanser;
 
 our %SPEC;
+
+sub _is_excluded {
+    my ($x, $exc_list) = @_;
+    for (@$exc_list) {
+        if (/(.+)::\*?\z/) {
+            return 1 if index($x, "$1\::") == 0;
+        } else {
+            return 1 if $x eq $_;
+        }
+    }
+    0;
+}
 
 $SPEC{update_rinci_metadata_db} = {
     v => 1.1,
@@ -47,15 +59,35 @@ _
             summary => 'DBI connection password',
             schema => 'str*',
         },
-        module => {
-            summary => 'Perl module or prefixes to add/update',
+        module_or_package => {
+            summary => 'Perl module or prefixes or package to add/update',
+            description => <<'_',
+
+For each entry, you can specify:
+
+* a Perl module name e.g. `Foo::Bar`. An attempt will be made to load that
+  module.
+
+* a module prefix ending with `::` or `::*` e.g. `Foo::Bar::*`. `Module::List`
+  will be used to list all modules under `Foo::Bar::` recursively and load all
+  those modules.
+
+* a package name using `+Foo::Bar` syntax. An attempt to load module with that
+  name will *not* be made. This can be used to add an already-loaded package
+  e.g. by another module).
+
+* a package prefix using `+Foo::Bar::` or `+Foo::Bar::*` syntax. Subpackages
+  will be listed recursively (using `SHARYANTO::Package::Util`'s
+  `list_subpackages`).
+
+_
             schema => ['array*' => of => 'str*'],
             req => 1,
             pos => 1,
             greedy => 1,
         },
         exclude => {
-            summary => 'Perl modules to exclude',
+            summary => 'Perl package names or prefixes to exclude',
             schema => ['array*' => of => 'str*'],
         },
         library => {
@@ -68,11 +100,51 @@ make sure you use the right library, you can use `PERL5OPT` or explicitly use
 
 _
             cmdline_aliases => { I=>{} },
+            cmdline_on_getopt => sub {
+                my %args = @_;
+                require lib;
+                lib->import($args{value});
+            },
         },
-        force => {
+        use => {
+            schema => ['array' => of => 'str*'],
+            summary => 'Use a Perl module, a la Perl\'s -M',
+            cmdline_aliases => {M=>{}},
+            cmdline_on_getopt => sub {
+                my %args = @_;
+                my $val = $args{value};
+                if (my ($mod, $imp) = $val =~ /(.+?)=(.+)/) {
+                    $log->debug("Loading module $mod ...");
+                    load $mod;
+                    $mod->import(split /,/, $imp);
+                } else {
+                    $log->debug("Loading module $val ...");
+                    autoload $val;
+                }
+            },
+        },
+        require => {
+            schema => ['array' => of => 'str*'],
+            summary => 'Require a Perl module, a la Perl\'s -m',
+            cmdline_aliases => {m=>{}},
+            cmdline_on_getopt => sub {
+                my %args = @_;
+                my $val = $args{value};
+                $log->debug("Loading module $val ...");
+                load $val;
+            },
+        },
+        force_update => {
             summary => "Force update database even though module ".
                 "hasn't changed since last update",
             schema => 'bool',
+            cmdline_aliases => { force=>{} }, # old alias
+        },
+        delete => {
+            summary => "Whether to delete packages from DB if no longer ".
+                "mentioned as arguments or found in filesystem",
+            schema  => 'bool',
+            default => 1,
         },
     },
     features => {
@@ -82,16 +154,13 @@ _
 };
 sub update_rinci_metadata_db {
     my %args = @_;
-    for my $dir (@{ $args{library} // [] }) {
-        require lib;
-        lib->import($dir);
-    }
 
     require DBI;
     require JSON;
     require Module::List;
     require Module::Path;
     require Perinci::Access::Perl;
+    require SHARYANTO::Package::Util;
     require SHARYANTO::SQL::Schema;
 
     state $json = JSON->new->allow_nonref;
@@ -102,9 +171,25 @@ sub update_rinci_metadata_db {
 
     my $res = SHARYANTO::SQL::Schema::create_or_update_db_schema(
         spec => {
+            latest_v => 2,
+            # v1
+            #install => [
+            #    'CREATE TABLE IF NOT EXISTS module (name VARCHAR(255) PRIMARY KEY, summary TEXT, metadata BLOB, mtime INT)',
+            #    'CREATE TABLE IF NOT EXISTS function (module VARCHAR(255) NOT NULL, name VARCHAR(255) NOT NULL, summary TEXT, metadata BLOB, UNIQUE(module, name))',
+            #],
             install => [
-                'CREATE TABLE IF NOT EXISTS module (name VARCHAR(255) PRIMARY KEY, summary TEXT, metadata BLOB, mtime INT)',
-                'CREATE TABLE IF NOT EXISTS function (module VARCHAR(255) NOT NULL, name VARCHAR(255) NOT NULL, summary TEXT, metadata BLOB, UNIQUE(module, name))',
+                'CREATE TABLE IF NOT EXISTS package (name VARCHAR(255) PRIMARY KEY, summary TEXT, metadata BLOB, mtime INT)',
+                'CREATE TABLE IF NOT EXISTS function (package VARCHAR(255) NOT NULL, name VARCHAR(255) NOT NULL, summary TEXT, metadata BLOB, UNIQUE(package, name))',
+            ],
+            upgrade_to_v2 => [
+                # rename to package
+                'DROP TABLE module',
+                'CREATE TABLE IF NOT EXISTS package (name VARCHAR(255) PRIMARY KEY, summary TEXT, metadata BLOB, mtime INT)',
+
+                # we'll just drop everything and rebuild, since it's painful to
+                # rename column in sqlite
+                'DROP TABLE function',
+                'CREATE TABLE IF NOT EXISTS function (package VARCHAR(255) NOT NULL, name VARCHAR(255) NOT NULL, summary TEXT, metadata BLOB, UNIQUE(package, name))',
             ],
         },
         dbh => $dbh,
@@ -113,41 +198,62 @@ sub update_rinci_metadata_db {
 
     my $exc = $args{exclude} // [];
 
-    my @mods;
-    for (@{ $args{module} }) {
-        if (/::$/) {
+    my @pkgs;
+    for (@{ $args{module_or_package} }) {
+        if (/\A\+(.+)::\*?\z/) {
+            # package prefix
+            $log->debug("Listing all packages under $1 ...");
+            for (SHARYANTO::Package::Util::list_subpackages($1, 1)) {
+                next if $_ ~~ @pkgs || _is_excluded($_, $exc);
+                push @pkgs, $_;
+            }
+        } elsif (/\A\+(.+)/) {
+            # package name
+            my $pkg = $1;
+            next if $pkg ~~ @pkgs || _is_excluded($pkg, $exc);
+            push @pkgs, $pkg;
+        } elsif (/(.+::)\*?\z/) {
+            # module prefix
+            $log->debug("Listing all modules under $1 ...");
             my $res = Module::List::list_modules(
-                $_, {list_modules=>1, recurse=>1});
+                $1, {list_modules=>1, recurse=>1});
             for (sort keys %$res) {
-                push @mods, $_ unless $_ ~~ @mods || $_ ~~ @$exc;
+                next if $_ ~~ @pkgs || _is_excluded($_, $exc);
+                $log->debug("Loading module $_ ...");
+                load $_;
+                push @pkgs, $_;
             }
         } else {
-            push @mods, $_ unless $_ ~~ @mods || $_ ~~ @$exc;
+            # module name
+            next if $_ ~~ @pkgs || _is_excluded($_, $exc);
+            $log->debug("Loading module $_ ...");
+            load $_;
+            push @pkgs, $_;
         }
     }
 
     my $progress = $args{-progress};
     $progress->pos(0) if $progress;
-    $progress->target(~~@mods) if $progress;
+    $progress->target(~~@pkgs) if $progress;
     my $i = 0;
-    for my $mod (@mods) {
+    for my $pkg (@pkgs) {
         $i++;
-        $progress->update(pos=>$i, message => "Processing module $mod ...") if $progress;
-        $log->debug("Processing module $mod ...");
+        $progress->update(pos=>$i, message => "Processing package $pkg ...") if $progress;
+        $log->debug("Processing package $pkg ...");
         #sleep 1;
-        my $rec = $dbh->selectrow_hashref("SELECT * FROM module WHERE name=?",
-                                          {}, $mod);
-        my $mp = Module::Path::module_path($mod);
-        my @st = stat($mp);
+        my $rec = $dbh->selectrow_hashref("SELECT * FROM package WHERE name=?",
+                                          {}, $pkg);
+        my $mp = Module::Path::module_path($pkg);
+        my @st = stat($mp) if $mp;
 
-        unless ($args{force} || !$rec || !$rec->{mtime} || $rec->{mtime} < $st[9]) {
-            $log->debug("$mod ($mp) hasn't changed since last recorded, skipped");
+        unless ($args{force} || !$rec || !$rec->{mtime} || !@st || $rec->{mtime} < $st[9]) {
+            $log->debug("$pkg ($mp) hasn't changed since last recorded, skipped");
             next;
         }
 
         next if $args{-dry_run};
 
-        my $uri = $mod; $uri =~ s!::!/!g; $uri = "pl:/$uri/";
+        my $uri = $pkg; $uri =~ s!::!/!g; $uri = "pl:/$uri/";
 
         $res = $pa->request(meta => "$uri");
         die "Can't meta $uri: $res->[0] - $res->[1]" unless $res->[0] == 200;
@@ -157,35 +263,37 @@ sub update_rinci_metadata_db {
         die "Can't list $uri: $res->[0] - $res->[1]" unless $res->[0] == 200;
         my $numf = @{ $res->[2] };
 
-        $dbh->do("INSERT INTO module (name, summary, metadata, mtime) VALUES (?,?,?,0)", {}, $mod, $pkgmeta->{summary}, $json->encode($pkgmeta), $st[9]) unless $rec;
-        $dbh->do("UPDATE module set mtime=? WHERE name=?", {}, $st[9], $mod);
-        $dbh->do("DELETE FROM function WHERE module=?", {}, $mod);
+        $dbh->do("INSERT INTO package (name, summary, metadata, mtime) VALUES (?,?,?,0)", {}, $pkg, $pkgmeta->{summary}, $json->encode($pkgmeta), $st[9]) unless $rec;
+        $dbh->do("UPDATE package set mtime=? WHERE name=?", {}, $st[9], $pkg);
+        $dbh->do("DELETE FROM function WHERE package=?", {}, $pkg);
         my $j = 0;
         for my $e (@{ $res->[2] }) {
             my $f = $e; $f =~ s!.+/!!;
             $j++;
-            $log->debug("Processing function $mod\::$f ...");
-            $progress->update(pos => $i + $j/$numf, message => "Processing function $mod\::$f ...") if $progress;
+            $log->debug("Processing function $pkg\::$f ...");
+            $progress->update(pos => $i + $j/$numf, message => "Processing function $pkg\::$f ...") if $progress;
             $res = $pa->request(meta => "$uri$e");
             die "Can't meta $e: $res->[0] - $res->[1]" unless $res->[0] == 200;
             $cleanser->clean_in_place(my $meta = $res->[2]);
-            $dbh->do("INSERT INTO function (module, name, summary, metadata) VALUES (?,?,?,?)", {}, $mod, $f, $meta->{summary}, $json->encode($meta));
+            $dbh->do("INSERT INTO function (package, name, summary, metadata) VALUES (?,?,?,?)", {}, $pkg, $f, $meta->{summary}, $json->encode($meta));
         }
     }
     $progress->finish if $progress;
 
-    my @deleted_mods;
-    my $sth = $dbh->prepare("SELECT name FROM module");
-    $sth->execute;
-    while (my $row = $sth->fetchrow_hashref) {
-        next if $row->{name} ~~ @mods;
-        $log->info("Module $row->{name} no longer exists, deleting from database ...");
-        push @deleted_mods, $row->{name};
-    }
-    if (@deleted_mods && !$args{-dry_run}) {
-        my $in = join(",", map {$dbh->quote($_)} @deleted_mods);
-        $dbh->do("DELETE FROM function WHERE module IN ($in)");
-        $dbh->do("DELETE FROM module WHERE name IN ($in)");
+    if ($args{delete} // 1) {
+        my @deleted_pkgs;
+        my $sth = $dbh->prepare("SELECT name FROM package");
+        $sth->execute;
+        while (my $row = $sth->fetchrow_hashref) {
+            next if $row->{name} ~~ @pkgs;
+            $log->info("Package $row->{name} no longer exists, deleting from database ...");
+            push @deleted_pkgs, $row->{name};
+        }
+        if (@deleted_pkgs && !$args{-dry_run}) {
+            my $in = join(",", map {$dbh->quote($_)} @deleted_pkgs);
+            $dbh->do("DELETE FROM function WHERE package IN ($in)");
+            $dbh->do("DELETE FROM package WHERE name IN ($in)");
+        }
     }
 
     [200, "OK"];
@@ -206,7 +314,7 @@ App::UpdateRinciMetadataDb - Create/update Rinci metadata database
 
 =head1 VERSION
 
-This document describes version 0.03 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-06-20.
+This document describes version 0.04 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-07-04.
 
 =head1 FUNCTIONS
 
@@ -222,6 +330,10 @@ Arguments ('*' denotes required arguments):
 
 =over 4
 
+=item * B<delete> => I<bool> (default: 1)
+
+Whether to delete packages from DB if no longer mentioned as arguments or found in filesystem.
+
 =item * B<dsn>* => I<str>
 
 DBI connection DSN.
@@ -230,9 +342,9 @@ Note: has been tested with MySQL and SQLite only.
 
 =item * B<exclude> => I<array>
 
-Perl modules to exclude.
+Perl package names or prefixes to exclude.
 
-=item * B<force> => I<bool>
+=item * B<force_update> => I<bool>
 
 Force update database even though module hasn't changed since last update.
 
@@ -244,13 +356,58 @@ Note that some modules are already loaded before this option takes effect. To
 make sure you use the right library, you can use C<PERL5OPT> or explicitly use
 C<perl> and use its C<-I> option.
 
-=item * B<module>* => I<array>
+=item * B<module_or_package>* => I<array>
 
-Perl module or prefixes to add/update.
+Perl module or prefixes or package to add/update.
+
+For each entry, you can specify:
+
+=over
+
+=item *
+
+a Perl module name e.g. C<Foo::Bar>. An attempt will be made to load that
+  module.
+
+
+
+=item *
+
+a module prefix ending with C<::> or C<::*> e.g. C<Foo::Bar::*>. C<Module::List>
+  will be used to list all modules under C<Foo::Bar::> recursively and load all
+  those modules.
+
+
+
+=item *
+
+a package name using C<+Foo::Bar> syntax. An attempt to load module with that
+  name will I<not> be made. This can be used to add an already-loaded package
+  e.g. by another module).
+
+
+
+=item *
+
+a package prefix using C<+Foo::Bar::> or C<+Foo::Bar::*> syntax. Subpackages
+  will be listed recursively (using C<SHARYANTO::Package::Util>'s
+  C<list_subpackages>).
+
+
+
+=back
 
 =item * B<password> => I<str>
 
 DBI connection password.
+
+=item * B<require> => I<array>
+
+Require a Perl module, a la Perl's -m.
+
+=item * B<use> => I<array>
+
+Use a Perl module, a la Perl's -M.
 
 =item * B<user> => I<str>
 
