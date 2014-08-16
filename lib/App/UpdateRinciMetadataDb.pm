@@ -1,5 +1,8 @@
 package App::UpdateRinciMetadataDb;
 
+our $DATE = '2014-08-16'; # DATE
+our $VERSION = '0.06'; # VERSION
+
 use 5.010001;
 use strict;
 use warnings;
@@ -14,11 +17,7 @@ use Module::Path;
 use Perinci::Access::Perl;
 use SHARYANTO::SQL::Schema;
 
-our $VERSION = '0.05'; # VERSION
-our $DATE = '2014-07-04'; # DATE
-
 use Data::Clean::JSON;
-use Perinci::CmdLine;
 
 my $cleanser = Data::Clean::JSON->get_cleanser;
 
@@ -314,7 +313,7 @@ App::UpdateRinciMetadataDb - Create/update Rinci metadata database
 
 =head1 VERSION
 
-This document describes version 0.05 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-07-04.
+This document describes version 0.06 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-08-16.
 
 =head1 FUNCTIONS
 
@@ -364,36 +363,20 @@ For each entry, you can specify:
 
 =over
 
-=item *
+=item * a Perl module name e.g. C<Foo::Bar>. An attempt will be made to load that
+module.
 
-a Perl module name e.g. C<Foo::Bar>. An attempt will be made to load that
-  module.
+=item * a module prefix ending with C<::> or C<::*> e.g. C<Foo::Bar::*>. C<Module::List>
+will be used to list all modules under C<Foo::Bar::> recursively and load all
+those modules.
 
+=item * a package name using C<+Foo::Bar> syntax. An attempt to load module with that
+name will I<not> be made. This can be used to add an already-loaded package
+e.g. by another module).
 
-
-=item *
-
-a module prefix ending with C<::> or C<::*> e.g. C<Foo::Bar::*>. C<Module::List>
-  will be used to list all modules under C<Foo::Bar::> recursively and load all
-  those modules.
-
-
-
-=item *
-
-a package name using C<+Foo::Bar> syntax. An attempt to load module with that
-  name will I<not> be made. This can be used to add an already-loaded package
-  e.g. by another module).
-
-
-
-=item *
-
-a package prefix using C<+Foo::Bar::> or C<+Foo::Bar::*> syntax. Subpackages
-  will be listed recursively (using C<SHARYANTO::Package::Util>'s
-  C<list_subpackages>).
-
-
+=item * a package prefix using C<+Foo::Bar::> or C<+Foo::Bar::*> syntax. Subpackages
+will be listed recursively (using C<SHARYANTO::Package::Util>'s
+C<list_subpackages>).
 
 =back
 
@@ -435,6 +418,8 @@ First element (status) is an integer containing HTTP status code
 200. Third element (result) is optional, the actual result. Fourth
 element (meta) is called result metadata and is optional, a hash
 that contains extra information.
+
+ (any)
 
 =head1 HOMEPAGE
 

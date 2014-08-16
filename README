@@ -2,8 +2,8 @@ NAME
     App::UpdateRinciMetadataDb - Create/update Rinci metadata database
 
 VERSION
-    This document describes version 0.05 of App::UpdateRinciMetadataDb (from
-    Perl distribution App-UpdateRinciMetadataDb), released on 2014-07-04.
+    This document describes version 0.06 of App::UpdateRinciMetadataDb (from
+    Perl distribution App-UpdateRinciMetadataDb), released on 2014-08-16.
 
 FUNCTIONS
   update_rinci_metadata_db(%args) -> [status, msg, result, meta]
@@ -94,6 +94,8 @@ FUNCTIONS
     element (result) is optional, the actual result. Fourth element (meta)
     is called result metadata and is optional, a hash that contains extra
     information.
+
+     (any)
 
 HOMEPAGE
     Please visit the project's homepage at

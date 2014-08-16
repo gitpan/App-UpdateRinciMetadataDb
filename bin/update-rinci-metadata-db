@@ -1,19 +1,22 @@
 #!perl
 
-use 5.010;
+# Note: This script is a CLI interface to Riap function /App/UpdateRinciMetadataDb/update_rinci_metadata_db
+# and generated automatically using Dist::Zilla::Plugin::Rinci::ScriptFromFunc version 0.01
+
+our $DATE = '2014-08-16'; # DATE
+our $VERSION = '0.06'; # VERSION
+
+use 5.010001;
 use strict;
 use warnings;
 
-use Perinci::CmdLine;
+use Perinci::CmdLine::Any -prefer_lite=>1;
 
-our $VERSION = '0.05'; # VERSION
-our $DATE = '2014-07-04'; # DATE
-
-Perinci::CmdLine->new(
-    url => '/App/UpdateRinciMetadataDb/update_rinci_metadata_db',
+Perinci::CmdLine::Any->new(
+    url => "/App/UpdateRinciMetadataDb/update_rinci_metadata_db",
 )->run;
 
-# ABSTRACT: Create/update Rinci metadata database
+# ABSTRACT: Create/update Spanel API metadata database
 # PODNAME: update-rinci-metadata-db
 
 __END__
@@ -24,49 +27,31 @@ __END__
 
 =head1 NAME
 
-update-rinci-metadata-db - Create/update Rinci metadata database
+update-rinci-metadata-db - Create/update Spanel API metadata database
 
 =head1 VERSION
 
-This document describes version 0.05 of update-rinci-metadata-db (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-07-04.
+This document describes version 0.06 of update-rinci-metadata-db (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-08-16.
 
 =head1 SYNOPSIS
 
-Will scan all modules under C<MyApp::> recursively and record into database.
+Usage:
 
- % update-rinci-metadata-db dbi:SQLite:dbname=metadata.db MyApp::
+ % update-rinci-metadata-db
 
-For more options:
+Examples:
+
+ TODO
+
+To see all options:
 
  % update-rinci-metadata-db --help
 
 =head1 DESCRIPTION
 
-This script creates/updates database that stores L<Rinci> metadata retrieved
-from Perl modules. The created database is suitable for use by
-L<Perinci::Access::Schemeless::DBI>.
-
-=head1 USAGE
-
- % update-rinci-metadata-db [opt] <DBI-DSN> <module-or-prefixes> ...
-
 =head1 OPTIONS
 
-=head2 --user => str
-
-DBI connection username.
-
-=head2 --password => str
-
-DBI connection password.
-
-=head1 TODO
-
-Allow other serialization format than L<JSON>.
-
-=head1 SEE ALSO
-
-L<Perinci::Access::Schemeless::DBI>
+ TODO
 
 =head1 HOMEPAGE
 
