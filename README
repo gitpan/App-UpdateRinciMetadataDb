@@ -2,8 +2,8 @@ NAME
     App::UpdateRinciMetadataDb - Create/update Rinci metadata database
 
 VERSION
-    This document describes version 0.06 of App::UpdateRinciMetadataDb (from
-    Perl distribution App-UpdateRinciMetadataDb), released on 2014-08-16.
+    This document describes version 0.07 of App::UpdateRinciMetadataDb (from
+    Perl distribution App-UpdateRinciMetadataDb), released on 2014-09-12.
 
 FUNCTIONS
   update_rinci_metadata_db(%args) -> [status, msg, result, meta]
@@ -114,10 +114,10 @@ BUGS
     to an existing test-file that illustrates the bug or desired feature.
 
 AUTHOR
-    Steven Haryanto <stevenharyanto@gmail.com>
+    perlancar <perlancar@cpan.org>
 
 COPYRIGHT AND LICENSE
-    This software is copyright (c) 2014 by Steven Haryanto.
+    This software is copyright (c) 2014 by perlancar@cpan.org.
 
     This is free software; you can redistribute it and/or modify it under
     the same terms as the Perl 5 programming language system itself.

@@ -1,7 +1,7 @@
 package App::UpdateRinciMetadataDb;
 
-our $DATE = '2014-08-16'; # DATE
-our $VERSION = '0.06'; # VERSION
+our $DATE = '2014-09-12'; # DATE
+our $VERSION = '0.07'; # VERSION
 
 use 5.010001;
 use strict;
@@ -15,7 +15,7 @@ use JSON;
 use Module::Load qw(autoload load);
 use Module::Path;
 use Perinci::Access::Perl;
-use SHARYANTO::SQL::Schema;
+use SQL::Schema::Versioned;
 
 use Data::Clean::JSON;
 
@@ -160,7 +160,7 @@ sub update_rinci_metadata_db {
     require Module::Path;
     require Perinci::Access::Perl;
     require SHARYANTO::Package::Util;
-    require SHARYANTO::SQL::Schema;
+    require SQL::Schema::Versioned;
 
     state $json = JSON->new->allow_nonref;
     state $pa = Perinci::Access::Perl->new;
@@ -168,7 +168,7 @@ sub update_rinci_metadata_db {
     my $dbh = DBI->connect($args{dsn}, $args{user}, $args{password},
                            {RaiseError=>1});
 
-    my $res = SHARYANTO::SQL::Schema::create_or_update_db_schema(
+    my $res = SQL::Schema::Versioned::create_or_update_db_schema(
         spec => {
             latest_v => 2,
             # v1
@@ -313,7 +313,7 @@ App::UpdateRinciMetadataDb - Create/update Rinci metadata database
 
 =head1 VERSION
 
-This document describes version 0.06 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-08-16.
+This document describes version 0.07 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-09-12.
 
 =head1 FUNCTIONS
 
@@ -439,11 +439,11 @@ feature.
 
 =head1 AUTHOR
 
-Steven Haryanto <stevenharyanto@gmail.com>
+perlancar <perlancar@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2014 by Steven Haryanto.
+This software is copyright (c) 2014 by perlancar@cpan.org.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

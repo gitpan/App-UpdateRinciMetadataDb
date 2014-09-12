@@ -11,7 +11,7 @@ use ExtUtils::MakeMaker 6.30;
 
 my %WriteMakefileArgs = (
   "ABSTRACT" => "Create/update Rinci metadata database",
-  "AUTHOR" => "Steven Haryanto <stevenharyanto\@gmail.com>",
+  "AUTHOR" => "perlancar <perlancar\@cpan.org>",
   "BUILD_REQUIRES" => {},
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.30"
@@ -33,7 +33,7 @@ my %WriteMakefileArgs = (
     "Perinci::CmdLine::Any" => "0.06",
     "Rinci" => "v1.1.0",
     "SHARYANTO::Package::Util" => 0,
-    "SHARYANTO::SQL::Schema" => 0,
+    "SQL::Schema::Versioned" => 0,
     "experimental" => 0
   },
   "TEST_REQUIRES" => {
@@ -42,7 +42,7 @@ my %WriteMakefileArgs = (
     "IPC::Open3" => 0,
     "Test::More" => 0
   },
-  "VERSION" => "0.06",
+  "VERSION" => "0.07",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -63,7 +63,7 @@ my %FallbackPrereqs = (
   "Perinci::CmdLine::Any" => "0.06",
   "Rinci" => "v1.1.0",
   "SHARYANTO::Package::Util" => 0,
-  "SHARYANTO::SQL::Schema" => 0,
+  "SQL::Schema::Versioned" => 0,
   "Test::More" => 0,
   "experimental" => 0
 );
