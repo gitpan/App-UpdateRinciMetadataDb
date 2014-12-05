@@ -2,8 +2,8 @@ NAME
     App::UpdateRinciMetadataDb - Create/update Rinci metadata database
 
 VERSION
-    This document describes version 0.07 of App::UpdateRinciMetadataDb (from
-    Perl distribution App-UpdateRinciMetadataDb), released on 2014-09-12.
+    This document describes version 0.08 of App::UpdateRinciMetadataDb (from
+    Perl distribution App-UpdateRinciMetadataDb), released on 2014-12-05.
 
 FUNCTIONS
   update_rinci_metadata_db(%args) -> [status, msg, result, meta]
@@ -60,7 +60,7 @@ FUNCTIONS
 
         *   a package prefix using "+Foo::Bar::" or "+Foo::Bar::*" syntax.
             Subpackages will be listed recursively (using
-            "SHARYANTO::Package::Util"'s "list_subpackages").
+            "Package::MoreUtil"'s "list_subpackages").
 
     *   password => *str*
 
@@ -103,7 +103,7 @@ HOMEPAGE
 
 SOURCE
     Source repository is at
-    <https://github.com/sharyanto/perl-App-UpdateRinciMetadataDb>.
+    <https://github.com/perlancar/perl-App-UpdateRinciMetadataDb>.
 
 BUGS
     Please report any bugs or feature requests on the bugtracker website

@@ -1,7 +1,7 @@
 package App::UpdateRinciMetadataDb;
 
-our $DATE = '2014-09-12'; # DATE
-our $VERSION = '0.07'; # VERSION
+our $DATE = '2014-12-05'; # DATE
+our $VERSION = '0.08'; # VERSION
 
 use 5.010001;
 use strict;
@@ -76,7 +76,7 @@ For each entry, you can specify:
   e.g. by another module).
 
 * a package prefix using `+Foo::Bar::` or `+Foo::Bar::*` syntax. Subpackages
-  will be listed recursively (using `SHARYANTO::Package::Util`'s
+  will be listed recursively (using `Package::MoreUtil`'s
   `list_subpackages`).
 
 _
@@ -158,8 +158,8 @@ sub update_rinci_metadata_db {
     require JSON;
     require Module::List;
     require Module::Path;
+    require Package::MoreUtil;
     require Perinci::Access::Perl;
-    require SHARYANTO::Package::Util;
     require SQL::Schema::Versioned;
 
     state $json = JSON->new->allow_nonref;
@@ -202,7 +202,7 @@ sub update_rinci_metadata_db {
         if ($entry =~ /\A\+(.+)::\*?\z/) {
             # package prefix
             $log->debug("Listing all packages under $1 ...");
-            for (SHARYANTO::Package::Util::list_subpackages($1, 1)) {
+            for (Package::MoreUtil::list_subpackages($1, 1)) {
                 next if $_ ~~ @pkgs || _is_excluded($_, $exc);
                 push @pkgs, $_;
             }
@@ -313,7 +313,7 @@ App::UpdateRinciMetadataDb - Create/update Rinci metadata database
 
 =head1 VERSION
 
-This document describes version 0.07 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-09-12.
+This document describes version 0.08 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-12-05.
 
 =head1 FUNCTIONS
 
@@ -375,7 +375,7 @@ name will I<not> be made. This can be used to add an already-loaded package
 e.g. by another module).
 
 =item * a package prefix using C<+Foo::Bar::> or C<+Foo::Bar::*> syntax. Subpackages
-will be listed recursively (using C<SHARYANTO::Package::Util>'s
+will be listed recursively (using C<Package::MoreUtil>'s
 C<list_subpackages>).
 
 =back
@@ -427,7 +427,7 @@ Please visit the project's homepage at L<https://metacpan.org/release/App-Update
 
 =head1 SOURCE
 
-Source repository is at L<https://github.com/sharyanto/perl-App-UpdateRinciMetadataDb>.
+Source repository is at L<https://github.com/perlancar/perl-App-UpdateRinciMetadataDb>.
 
 =head1 BUGS
 
