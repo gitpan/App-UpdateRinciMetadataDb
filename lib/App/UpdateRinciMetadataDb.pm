@@ -1,7 +1,7 @@
 package App::UpdateRinciMetadataDb;
 
-our $DATE = '2014-12-05'; # DATE
-our $VERSION = '0.08'; # VERSION
+our $DATE = '2014-12-27'; # DATE
+our $VERSION = '0.09'; # VERSION
 
 use 5.010001;
 use strict;
@@ -13,7 +13,7 @@ use Data::Clean::JSON;
 use DBI;
 use JSON;
 use Module::Load qw(autoload load);
-use Module::Path;
+use Module::Path::More;
 use Perinci::Access::Perl;
 use SQL::Schema::Versioned;
 
@@ -37,7 +37,7 @@ sub _is_excluded {
 
 $SPEC{update_rinci_metadata_db} = {
     v => 1.1,
-    summary => 'Create/update Spanel API metadata database',
+    summary => 'Create/update Rinci API metadata database',
     args => {
         dsn => {
             summary => 'DBI connection DSN',
@@ -157,7 +157,6 @@ sub update_rinci_metadata_db {
     require DBI;
     require JSON;
     require Module::List;
-    require Module::Path;
     require Package::MoreUtil;
     require Perinci::Access::Perl;
     require SQL::Schema::Versioned;
@@ -242,7 +241,7 @@ sub update_rinci_metadata_db {
         #sleep 1;
         my $rec = $dbh->selectrow_hashref("SELECT * FROM package WHERE name=?",
                                           {}, $pkg);
-        my $mp = Module::Path::module_path($pkg);
+        my $mp = Module::Path::More::module_path(module=>$pkg);
         my @st = stat($mp) if $mp;
 
         unless ($args{force} || !$rec || !$rec->{mtime} || !@st || $rec->{mtime} < $st[9]) {
@@ -299,7 +298,7 @@ sub update_rinci_metadata_db {
 }
 
 1;
-# ABSTRACT: Create/update Rinci metadata database
+# ABSTRACT: Create/update Rinci API metadata database
 
 __END__
 
@@ -309,18 +308,18 @@ __END__
 
 =head1 NAME
 
-App::UpdateRinciMetadataDb - Create/update Rinci metadata database
+App::UpdateRinciMetadataDb - Create/update Rinci API metadata database
 
 =head1 VERSION
 
-This document describes version 0.08 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-12-05.
+This document describes version 0.09 of App::UpdateRinciMetadataDb (from Perl distribution App-UpdateRinciMetadataDb), released on 2014-12-27.
 
 =head1 FUNCTIONS
 
 
 =head2 update_rinci_metadata_db(%args) -> [status, msg, result, meta]
 
-Create/update Spanel API metadata database.
+Create/update Rinci API metadata database.
 
 This function supports dry-run operation.
 
@@ -427,7 +426,7 @@ Please visit the project's homepage at L<https://metacpan.org/release/App-Update
 
 =head1 SOURCE
 
-Source repository is at L<https://github.com/perlancar/perl-App-UpdateRinciMetadataDb>.
+Source repository is at L<https://github.com/sharyanto/perl-App-UpdateRinciMetadataDb>.
 
 =head1 BUGS
 

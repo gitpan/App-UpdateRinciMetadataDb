@@ -1,5 +1,12 @@
 Revision history for App-UpdateRinciMetadataDb
 
+0.09    2014-12-27 (PERLANCAR)
+
+	- No functional changes.
+
+	- Replace Module::Path with Module::Path::More.
+
+
 0.08    2014-12-05 (PERLANCAR)
 
 	- No functional changes.
